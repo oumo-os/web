@@ -1070,73 +1070,7 @@
         // Event listener for DOMContentLoaded to fetch data and initialize
         document.addEventListener('DOMContentLoaded', fetchSiteData);
 
-        // Function to make Gemini API calls with exponential backoff
-        async function callGeminiAPI(prompt, outputElementId, retryCount = 0) {
-            const outputElement = document.getElementById(outputElementId);
-            const spinner = document.createElement('span');
-            spinner.className = 'loading-spinner';
-            
-            // Disable buttons and show loading
-            const buttons = outputElement.parentElement.querySelectorAll('.llm-button');
-            buttons.forEach(button => {
-                button.disabled = true;
-                if (!button.querySelector('.loading-spinner')) {
-                    button.appendChild(spinner);
-                }
-            });
-
-            outputElement.innerHTML = 'Generating content...';
-
-            const maxRetries = 5;
-            const baseDelay = 1000; // 1 second
-
-            try {
-                let chatHistory = [];
-                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                const payload = { contents: chatHistory };
-                const apiKey = ""; // Canvas will automatically provide this at runtime
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    if (response.status === 429 && retryCount < maxRetries) {
-                        const delay = baseDelay * Math.pow(2, retryCount) + Math.random() * 100;
-                        console.warn(`Rate limit hit. Retrying in ${delay / 1000}s... (Attempt ${retryCount + 1})`);
-                        await new Promise(res => setTimeout(res, delay));
-                        return callGeminiAPI(prompt, outputElementId, retryCount + 1);
-                    }
-                    throw new Error(`API error: ${response.status} ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    const text = result.candidates[0].content.parts[0].text;
-                    outputElement.innerText = text;
-                } else {
-                    outputElement.innerText = 'Error: Could not retrieve generated content.';
-                    console.error('Unexpected API response structure:', result);
-                }
-            } catch (error) {
-                console.error('Error calling Gemini API:', error);
-                outputElement.innerText = `Error: ${error.message}. Please try again.`;
-            } finally {
-                // Re-enable buttons and hide loading
-                buttons.forEach(button => {
-                    button.disabled = false;
-                    const existingSpinner = button.querySelector('.loading-spinner');
-                    if (existingSpinner) {
-                        button.removeChild(existingSpinner);
-                    }
-                });
-            }
-        }
+        
 
         // Show content page
         function showContent(contentId) {
@@ -1175,17 +1109,7 @@
             // Update content body
             document.getElementById('content-body').innerHTML = data.content;
             
-            // Hide LLM output div initially when content is loaded/reloaded
-            const llmOutputDivTukei = document.getElementById('tukei-verse-llm-output');
-            if (llmOutputDivTukei) {
-                llmOutputDivTukei.style.display = 'none';
-                llmOutputDivTukei.innerHTML = '';
-            }
-            const llmOutputDivClericus = document.getElementById('clericus-pitch-output');
-            if (llmOutputDivClericus) {
-                llmOutputDivClericus.style.display = 'none';
-                llmOutputDivClericus.innerHTML = '';
-            }
+            
 
 
             // Store previous section for back navigation
@@ -1239,33 +1163,7 @@
             }
         });
 
-        // LLM specific functions (now depend on global siteContentItems)
-        function generateTukeiVerseSummary() {
-            const tukeiVerseData = siteContentItems['tukei-verse'];
-            if (!tukeiVerseData) return;
-            const prompt = `Summarize the following text from "The Tukei-verse" in about 100 words:\n\n${tukeiVerseData.content}`;
-            const outputElementId = 'tukei-verse-llm-output';
-            document.getElementById(outputElementId).style.display = 'block';
-            callGeminiAPI(prompt, outputElementId);
-        }
-
-        function expandTukeiVerse() {
-            const tukeiVerseData = siteContentItems['tukei-verse'];
-            if (!tukeiVerseData) return;
-            const prompt = `Expand on the following overview of "The Tukei-verse" with more details on its themes and impact on real-world concepts. Aim for about 200-250 words, maintaining a consistent tone:\n\n${tukeiVerseData.content}`;
-            const outputElementId = 'tukei-verse-llm-output';
-            document.getElementById(outputElementId).style.display = 'block';
-            callGeminiAPI(prompt, outputElementId);
-        }
-
-        function generateClericusPitch() {
-            const clericusData = siteContentItems['clericus'];
-            if (!clericusData) return;
-            const prompt = `Generate a concise, compelling elevator pitch (around 50-70 words) for the "Clericus" project based on the following description. Focus on its core value proposition:\n\n${clericusData.content}`;
-            const outputElementId = 'clericus-pitch-output';
-            document.getElementById(outputElementId).style.display = 'block';
-            callGeminiAPI(prompt, outputElementId);
-        }
+        
     </script>
 </body>
 </html>
