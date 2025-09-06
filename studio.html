@@ -990,7 +990,7 @@
             });
         }
 
-        function handleNavItemClick(e) {
+        function handleNavItemClickOld(e) {
             e.preventDefault();
             
             navItems.forEach(nav => nav.classList.remove('active'));
@@ -1001,6 +1001,23 @@
             if (targetSection) {
                 previousSection = currentSection;
                 currentSection = this.dataset.section;
+                targetSection.classList.add('active');
+            }
+        }
+        function handleNavItemClick(e) {
+            e.preventDefault();
+            
+            // Remove 'active' from all nav items
+            navItems.forEach(nav => nav.classList.remove('active'));
+            this.classList.add('active'); // 'this' refers to the clicked nav
+            
+            // Get all current content sections, including any dynamically injected ones
+            const allSections = document.querySelectorAll('.content-section');
+            allSections.forEach(section => section.classList.remove('active'));
+            
+            // Activate the target section
+            const targetSection = document.getElementById(this.dataset.section);
+            if (targetSection) {
                 targetSection.classList.add('active');
             }
         }
